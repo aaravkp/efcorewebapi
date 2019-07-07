@@ -17,4 +17,8 @@ https://www.codeproject.com/Articles/1250932/Logging-and-Exception-handling-Vers
 
 https://www.c-sharpcorner.com/UploadFile/1492b1/restful-day-sharp6-request-logging-and-exception-handingloggin/
 
+https://www.c-sharpcorner.com/article/net-core-web-api-logging-using-nlog-in-text-file/
+
+https://www.tutorialsteacher.com/core/aspnet-core-logging
+
 
