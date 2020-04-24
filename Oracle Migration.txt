@@ -1,0 +1,274 @@
+27000@sm-sql 
+Oracle Dump folder link.
+https://secureshare.molgroup.info/login?LoginRedir=%2Fw%2FRhP7nS779C8tGdrj&w=RhP7nS779C8tGdrj 
+stefan.petersen@ulysta.com
+1qayXDR%
+
+--Oracle has no databases but schemas, you can list them with :
+SELECT USERNAME FROM ALL_USERS ORDER BY USERNAME; 
+or 
+SELECT TABLESPACE_NAME FROM USER_TABLESPACES;
+
+--Get the Directory
+SELECT directory_name, directory_path FROM dba_directories
+
+CREATE DIRECTORY mydir AS '/scratch/data/file_data';
+GRANT READ ON DIRECTORY bfile_dir TO userName;
+
+Example: 
+CREATE DIRECTORY MOLP1_DUMP AS 'D:\2020-Jan20200117155558\exp_vgsm11p_20200108Data+MetadataOnly';
+GRANT READ ON DIRECTORY MOLP1_DUMP TO MOLP1_DB;
+
+---TO Kill the job:
+DECLARE
+   h1 NUMBER;
+BEGIN
+   h1 := DBMS_DATAPUMP.ATTACH('IMPORT_JOB_SQLDEV_1238','SLOVNAFT1');
+   DBMS_DATAPUMP.STOP_JOB (h1,1,0);
+END;
+.....................
+
+---Import command:
+impdp SM_MOLPINS/SM_MOLPINS full=y SCHEMAS=VGSM11P DIRECTORY=MOLP1_DUMP DUMPFILE=exp_vgsm11_20200108MetadataOnly.dmp REMAP_SCHEMA=VGSM11P:SM_MOLPINS EXCLUDE=statistics index TABLE_EXISTS_ACTION=replace LOGFILE=SM_MOLPINSlog.log content=metadata_only
+
+
+impdp SM_MOLPINS/SM_MOLPINS schemas=VGSM11P directory=MOLP1_DUMP dumpfile=exp_vgsm11_20200108MetadataOnly.dmp logfile=exp_vgsm11_20200108MetadataOnly.log flashback_time=systimestamp compression=none exclude=statistics content=metadata_only
+
+
+--CREATE TABLESPACE <tablespace name> DATAFILE <path to save, example: 'C:\ORACLEXE\APP\ORACLE\ORADATA\XE\ABC.dbf'> SIZE 100M AUTOEXTEND ON NEXT 100M MAXSIZE 10G EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M;
+
+SELECT * FROM USER_TABLESPACES;
+imp help;
+
+create role sm_role;
+grant alter session to sm_role;
+grant create cluster to sm_role;
+grant create database link to sm_role;
+grant create session to sm_role;
+grant create synonym to sm_role;
+grant create table to sm_role;
+grant create view to sm_role;
+
+CREATE TABLESPACE VGSM_COMITTED DATAFILE 'D:\Oracle\oradata\MOLDATA\VGSM_COMITTED.dbf' SIZE 512M REUSE AUTOEXTEND ON NEXT 100M;
+grant connect, resource, sm_role to SM_MOLPINS identified by SM_MOLPINS;
+
+---TO rum import job more than one with different session.:
+
+SELECT PROPERTY_NAME, SUBSTR (property_value, 1, 30) value
+FROM   DATABASE_PROPERTIES
+WHERE  PROPERTY_NAME LIKE 'DST_%'
+ORDER  BY PROPERTY_NAME;  
+
+ALTER SESSION SET EVENTS '30090 TRACE NAME CONTEXT FOREVER, LEVEL 32';
+
+exec dbms_dst.unload_secondary;
+
+..........
+--To get session 
+SELECT * FROM V$SESSION WHERE STATUS = 'ACTIVE'
+
+Command> DECLARE v_invalid PLS_INTEGER;
+       > BEGIN
+       >   v_invalid := 100/0;
+       > EXCEPTION
+       > WHEN ZERO_DIVIDE THEN
+       >   DBMS_OUTPUT.PUT_LINE ('Attempt to divide by 0');
+       > END;
+       > /
+Attempt to divide by 0
+
+...................................
+--TO print the output on console:
+SET SERVEROUTPUT ON
+SET ECHO ON
+DECLARE
+x     NUMBER;
+BEGIN
+x := 72600;
+dbms_output.put_line('The variable  X = ');
+dbms_output.put_line(x);
+END;
+
+DECLARE 
+   name varchar2(20); 
+   company varchar2(30); 
+   introduction clob; 
+   choice char(1); 
+BEGIN 
+   name := 'John Smith'; 
+   company := 'Infotech'; 
+   introduction := ' Hello! I''m John Smith from Infotech.'; 
+   choice := 'y'; 
+   IF choice = 'y' THEN 
+      dbms_output.put_line(name); 
+      dbms_output.put_line(company); 
+      dbms_output.put_line(introduction); 
+   END IF; 
+END; 
+
+...........COMMIT AND ROLLBACK............
+begin
+
+  statement_zero;
+
+  savepoint my_savepoint;
+
+  begin
+    -- if either of these fail, then exception section will be executed
+    statement_one;
+    statement_two;
+  exception
+     when others then
+       rollback to my_savepoint;
+  end;
+
+  statement_three;
+
+  commit;
+
+end;
+
+...............
+Tablespaces
+    SELECT * FROM  USER_TABLESPACES
+    select * from v$datafile;
+    ALTER DATABASE MOVE DATAFILE 'C:\SOFTWARE\WINDOWS.X64_180000_DB_HOME\DATABASE\VGSM_DB.DBF'  TO 'D:\ORACLE\ORADATA\MOLDATA\VGSM_DB.DBF';
+    ALTER DATABASE DATAFILE 'C:\ORACLEXE\APP\ORACLE\ORADATA\XE\SYSTEM.DBF' AUTOEXTEND ON NEXT 1M MAXSIZE 1024M;
+    alter sequence VGSM.SEQ_SAMPLE_KEY0 restart start with 1;
+-------------
+SEQUENCE:
+ SELECT VGSM.SEQ_SAMPLE_KEY0.NEXTVAL FROM dual;
+..............
+#GET QUERY EXECUTION TIME
+SELECT
+opname,
+target,
+ROUND((sofar/totalwork),4)*100 Percentage_Complete,
+start_time,
+CEIL(time_remaining/60) Max_Time_Remaining_In_Min,
+FLOOR(elapsed_seconds/60) Time_Spent_In_Min
+FROM v$session_longops
+WHERE sofar != totalwork;
+
+........................
+
+CURSOR... #
+DECLARE
+CURSOR C 
+IS 
+SELECT DISTINCT security_id 
+FROM security_xref
+WHERE security_alias_type IN ('BADSYMBOL', 'ERRORSYMBOL', 'BADCUSIP', 'ERRORCUSIP' );
+-Counter to count records
+counter number(4) default 0;
+BEGIN
+FOR rec in C
+Loop
+UPDATE security SET display_security_alias = CONCAT ('BAD_ALIAS_', display_security_alias)
+WHERE security_id = rec.security_id 
+counter := counter +SQL%rowcount ;
+If counter >= 500 then
+counter := 0;
+commit;
+end if;
+END Loop;
+end ;
+
+.........................
+BEGIN
+      -- WHILE (TRUE) can be omitted: "loop ... end loop;" 
+      --  already is an endless loop
+      LOOP
+         UPDATE CUSTOMERS 
+             SET ACTIVE = 'N' 
+         WHERE ACTIVE='Y'
+           AND rownum <= 1000;  
+         exit when sql%notfound; -- notice that exit accepts "when condition"
+         --IF sql%notfound THEN  -- you can avoid a if/endif by using "exit when"
+         --   EXIT;
+         -- END IF;
+         COMMIT;
+   END LOOP;
+   commit; -- you missed this commit for the last iteration
+END;
+
+.......................
+TO CREATE INDEX:
+ 
+    create index VGSM.IDX$$_02860001 on VGSM.SAMPLE(TRIM("MOL_ORIGINAL_SAMPLE")
+    ,TRIM("ID_NUMERIC"));
+ 
+    create index VGSM.IDX$$_02860002 on VGSM.TEST(TRIM("MOL_ORIGINAL_TEST_NUMBE
+    R"));
+
+----------------------------------------------------------
+1.
+TO SUBSTRING IN COLUMN.
+SELECT REGEXP_SUBSTR(t.column_one, '[^ ]+', 1, 1) col_one,
+       REGEXP_SUBSTR(t.column_one, '[^ ]+', 1, 2) col_two
+FROM YOUR_TABLE t;
+2.
+SELECT SUBSTR(t.column_one, 1, INSTR(t.column_one, ' ')-1) AS col_one,
+       SUBSTR(t.column_one, INSTR(t.column_one, ' ')+1) AS col_two
+  FROM YOUR_TABLE t
+
+.......................................
+To open database and alter
+
+select * from v$datafile
+select NAME from v$datafile where file#=11;
+alter database datafile 11 OFFLINE DROP;
+alter database open;
+drop tablespace VGSM_ACTIVE;
+
+......................................
+
+TO CHECK THE CHARACTER SET AND CHANGE IT ACCORDINGLY.
+
+SELECT value FROM NLS_DATABASE_PARAMETERS WHERE parameter='NLS_CHARACTERSET'
+
+ALTER DATABASE CHARACTER SET EE8ISO8859P2;
+
+alter system set nls_length_semantics=CHAR scope=both;
+shutdown;
+startup restrict;
+alter database character set INTERNAL_USE EE8ISO8859P2;
+shutdown;
+startup;
+-
+Other way.
+update sys.props$ set VALUE$='EE8ISO8859P2' where NAME='NLS_CHARACTERSET';
+commit
+
+...................
+DB LINK.
+
+grant create database link to MOL_DBLINK;
+CREATE DATABASE LINK SM_MOLPINS
+    CONNECT TO SM_MOLPINS IDENTIFIED BY SM_MOLPINS
+    USING 'ORCL';
+
+CREATE DATABASE LINK SM_MOLPINS
+    CONNECT TO SM_MOLPINS IDENTIFIED BY SM_MOLPINS
+    USING 'localhost:1521/xe';
+
+select * from SM_MOLPINS.emp2@SM_MOLPINS.ULYSTA.INTERN;
+SELECT * FROM emp2@SM_MOLPINS.ULYSTA.INTERN;
+...........................
+
+
+
+--------------------------------------
+--BASIC COMMANDS FOR DYNAMIC DATA MIGRATION;
+--------------------------------------
+--DROP INDEX VGSM.IDX$$_02860001;
+--CREATE INDEX VGSM.IDX$$_02860001 on VGSM.SAMPLE(TRIM("MOL_ORIGINAL_SAMPLE"),TRIM("ID_NUMERIC")); 
+--CREATE INDEX VGSM.IDX$$_02860002 on VGSM.TEST(TRIM("MOL_ORIGINAL_TEST_NUMBER"));
+--SELECT MAX(TO_NUMBER(TEST_NUMBER)) FROM SM_MOLPINS.ARCHIVE_TEST
+--ALTER SEQUENCE VGSM.SEQ_ARCHIVE_TEST_KEY0 RESTART START WITH 163604;
+--TRUNCATE TABLE VGSM.RESULT;
+--SELECT COUNT(*) FROM VGSM.C_RESULT;
+--SELECT * FROM VGSM.TEST WHERE TEST_NUMBER = '10043761';
+---------------------------------------
+----------------------------------------
+ 
